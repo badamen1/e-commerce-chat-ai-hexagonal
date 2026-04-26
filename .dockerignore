@@ -1,0 +1,38 @@
+# Entorno virtual de Python
+venv/
+env/
+.venv/
+
+# Base de datos local
+data/
+*.db
+
+# Variables de entorno con credenciales
+.env
+
+# Caché de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Documentación de desarrollo
+docs/
+
+# Evidencias (screenshots)
+evidencias/

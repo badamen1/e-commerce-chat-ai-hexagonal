@@ -1,0 +1,59 @@
+# docker-compose.yml
+# ─────────────────────────────────────────────────────────────
+# Orquestación de servicios para el E-commerce Chat AI
+# Uso en desarrollo: docker compose up --build
+# ─────────────────────────────────────────────────────────────
+
+version: "3.9"
+
+services:
+
+  # ── API FastAPI ──────────────────────────────────────────────
+  api:
+    build:
+      context: .          # Directorio raíz donde está el Dockerfile
+      dockerfile: Dockerfile
+    container_name: ecommerce-api
+    ports:
+      - "8000:8000"       # HOST:CONTAINER  → accede en http://localhost:8000
+    environment:
+      # Sobreescribe con valores explícitos (tienen precedencia sobre env_file)
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DATABASE_URL=sqlite:////app/data/ecommerce_chat.db
+      - ENVIRONMENT=development
+      - PYTHONPATH=/app/src   # Permite importar infrastructure, application, domain directamente
+    env_file:
+      - .env              # Carga el resto de variables desde .env
+    volumes:
+      - .:/app            # Monta el código fuente (hot-reload en desarrollo)
+      - db-data:/app/data # Volumen nombrado para persistir la base de datos SQLite
+    command: >
+      uvicorn infrastructure.api.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s       # Verifica cada 30 segundos
+      timeout: 10s        # Tiempo máximo de espera
+      retries: 3          # Reintentos antes de marcar como unhealthy
+      start_period: 15s   # Tiempo de gracia al arrancar
+
+# ─────────────────────────────────────────────────────────────
+# Volúmenes nombrados
+# ─────────────────────────────────────────────────────────────
+
+volumes:
+  db-data:
+    driver: local         # Persiste la BD SQLite aunque el contenedor se elimine
+
+# ─────────────────────────────────────────────────────────────
+# Redes
+# ─────────────────────────────────────────────────────────────
+
+networks:
+  app-network:
+    driver: bridge        # Red bridge aislada para comunicación entre servicios
